@@ -7,8 +7,8 @@ var gameState = {
   'games': 0,
   'result': 0
 },
-    resultMessages = ["It's a draw.", "You won!", "You lost..."],
-    playMessages = [icon('hand-rock-o') + ' Rock', icon('hand-paper-o') + ' Paper', icon('hand-scissors-o') + ' Scissors'],
+    resultMessages = ["no stalls", "1 stall", "no stalls"],
+    playMessages = [' Car', ' Mobile', ' Machines'],
     maxGames = 5
 
 // work-around as markdown is not always correctly parsed
@@ -20,13 +20,13 @@ function icon(iconName) {
 function hello () {
   botui.message.bot({
     delay: 500,
-    content: "Would you like to play a game?"
+    content: "Would you like to see stalls?"
   }).then(function () {
     return botui.action.button({
       delay: 1000,
       action: [{
         icon: 'home',
-        text: 'Bring it on',
+        text: 'yes',
         value: 'yes'
       }, {
         icon: 'times',
@@ -53,30 +53,23 @@ function shifumi () {
     delay: 1000,
     addMessage: false,
     action: [{
-      icon: 'hand-rock-o',
-      text: 'Rock',
+      
+      text: 'Car',
       value: '0'
     }, {
-      icon: 'hand-paper-o',
-      text: 'Paper',
+      
+      text: 'Mobile',
       value: '1'
     }, {
-      icon: 'hand-scissors-o',
-      text: 'Scissors',
+      
+      text: 'Machine',
       value: '2'
     }]
   }).then(function (res) {
-    var playerMove = parseInt(res.value)
-    var botMove = Math.floor(Math.random()*3)
-    //result = 0 -> draw, 1 -> win, 2 -> loss
-    var result = (playerMove - botMove + 3) % 3
+    var playerMove =   parseInt(res.value)
+    var result = res.value
     gameState.result = result
-    gameState.games += 1
-    if (result === 1) {
-      gameState.wins += 1
-    } else if (result === 2) {
-      gameState.losses += 1
-    }
+    
     botui.message.add({
       delay: 1000,
       loading: true,
@@ -88,22 +81,29 @@ function shifumi () {
       delay: 1000,
       loading: true,
       type: 'html',
-      content: playMessages[botMove]
+      content: playMessages[playerMove]
     })
   }).then(function () {
     // fetch info from the global state
     var result = gameState.result
-    var score = '<br/>Score: ' + icon('android') + ' ' + gameState.losses + ' - ' + gameState.wins + ' ' + icon('user')
     return botui.message.bot({
       delay: 500,
       type: 'html',
-      content: resultMessages[result] + score
+      content: resultMessages[result]
     })
-  }).then((gameState.games < maxGames) ? shifumi : goodbye)
+  }).then(function () {
+    return botui.action.text({
+      delay: 1000,
+      action: {
+        placeholder: 'Buy some milk'
+      }
+    })
+  }).then(goodbye)
+      
 }
 
 function goodbye () {
-  botui.message.bot({
+  return botui.message.bot({
     delay: 500,
     content: "You've played enough already. Get back to work!"
   })
